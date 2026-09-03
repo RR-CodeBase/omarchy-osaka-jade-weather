@@ -22,18 +22,23 @@ WTTR_CACHE="$CACHE_DIR/wttr.json"
 WTTR_MAX_AGE=900 # seconds
 
 MOODS=(rain day night)
+MODIFIERS=(thunder)
 FLAGS=(enabled drift parallax grain)
+MODES=(followSun followWeather)
 
 DEFAULTS='{
   "enabled": true,
   "rain": false,
   "day": false,
   "night": true,
+  "thunder": false,
   "intensity": 1.0,
   "wind": 0.0,
   "drift": true,
   "parallax": true,
   "grain": true,
+  "followSun": false,
+  "followWeather": false,
   "sky": {
     "sunX": 0.60, "sunY": 0.14, "sunSize": 0.95,
     "moonX": 0.60, "moonY": 0.11, "moonSize": 0.52,
@@ -131,8 +136,8 @@ mood_label() {
   case "$r$d$n" in
   truetruetrue) echo "Everything At Once" ;;
   truetruefalse) echo "Sun Shower" ;;
-  truefalsetrue) echo "Night Storm" ;;
-  truefalsefalse) echo "Rain" ;;
+  truefalsetrue) [[ $(jq -r .thunder <<<"$s") == true ]] && echo "Night Storm" || echo "Rain At Night" ;;
+  truefalsefalse) [[ $(jq -r .thunder <<<"$s") == true ]] && echo "Thunderstorm" || echo "Rain" ;;
   falsetruetrue) echo "Golden Hour" ;;
   falsetruefalse) echo "Sunshine" ;;
   falsefalsetrue) echo "Night" ;;
@@ -270,26 +275,59 @@ sky_set() {
   esac
 }
 
+# -------------------------------------------------------------------- modes
+
+# followSun owns day/night only.
+apply_follow_sun() {
+  if is_daytime "$(fetch_wttr 2>/dev/null || true)"; then
+    write_state '.day=true | .night=false'
+  else
+    write_state '.day=false | .night=true'
+  fi
+}
+
+# followWeather owns the wet fields, and day/night too when followSun is off --
+# a real forecast knows the sunrise as well as the rain.
+apply_follow_weather() {
+  local report
+  report=$(fetch_wttr) || return 1
+  local code desc gust wet heavy daylight windv intens
+  code=$(jq -r '.current_condition[0].weatherCode // "113"' <<<"$report")
+  gust=$(jq -r '.current_condition[0].WindGustKmph // .current_condition[0].windspeedKmph // "0"' <<<"$report")
+  wet=false; heavy=false
+  case "$code" in
+  176 | 179 | 182 | 185 | 200 | 263 | 266 | 281 | 284 | 293 | 296 | 299 | 302 | 305 | 308 | 311 | 314 | 317 | 320 | 323 | 326 | 329 | 332 | 335 | 338 | 350 | 353 | 356 | 359 | 362 | 365 | 368 | 371 | 374 | 377 | 386 | 389 | 392 | 395)
+    wet=true ;;
+  esac
+  case "$code" in 200 | 386 | 389 | 392 | 395) heavy=true ;; esac
+  windv=$(awk -v g="$gust" 'BEGIN{ v=g/60; if (v>1) v=1; printf "%.2f", v }')
+  intens=1.0; [[ $heavy == true ]] && intens=1.5
+
+  if is_daytime "$report"; then daylight=true; else daylight=false; fi
+  write_state ".rain=$wet | .thunder=$heavy | .wind=$windv | .intensity=$intens \
+    | .day=$daylight | .night=$([[ $daylight == true ]] && echo false || echo true)"
+}
+
 # ------------------------------------------------------------------ presets
 
 apply_preset() {
   case "$1" in
   clear | off | none)
-    write_state '.rain=false | .day=false | .night=false' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=false | .thunder=false | .day=false | .night=false' ;;
   rain-only | shower)
-    write_state '.rain=true | .day=false | .night=false | .intensity=1.0 | .wind=0.15' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=true | .thunder=false | .day=false | .night=false | .intensity=1.0 | .wind=0.15' ;;
   drizzle)
-    write_state '.rain=true | .day=false | .night=true | .intensity=0.45 | .wind=0.05' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=true | .thunder=false | .day=false | .night=true | .intensity=0.45 | .wind=0.05' ;;
   storm)
-    write_state '.rain=true | .day=false | .night=true | .intensity=1.5 | .wind=0.55' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=true | .thunder=true | .day=false | .night=true | .intensity=1.5 | .wind=0.55' ;;
   sunshower)
-    write_state '.rain=true | .day=true | .night=false | .intensity=0.7 | .wind=0.1' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=true | .thunder=false | .day=true | .night=false | .intensity=0.7 | .wind=0.1' ;;
   noon | sunshine)
-    write_state '.rain=false | .day=true | .night=false | .intensity=1.0 | .wind=0' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=false | .day=true | .night=false | .intensity=1.0 | .wind=0' ;;
   goldenhour | golden)
-    write_state '.rain=false | .day=true | .night=true | .intensity=0.8 | .wind=0' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=false | .day=true | .night=true | .intensity=0.8 | .wind=0' ;;
   noir | midnight)
-    write_state '.rain=false | .day=false | .night=true | .intensity=1.0 | .wind=0' ;;
+    write_state '.followSun=false | .followWeather=false | .rain=false | .day=false | .night=true | .intensity=1.0 | .wind=0' ;;
   *) return 1 ;;
   esac
   return 0
@@ -310,6 +348,7 @@ Moods (independent toggles -- they stack):
   osaka-weather rain [on|off|toggle]  󰖗  rain, mist, splashes, lightning
   osaka-weather day  [on|off|toggle]  󰖙  sunlight, god rays, dust motes
   osaka-weather night [on|off|toggle] 󰖔  stars, moonlight, fireflies
+  osaka-weather thunder [on|off|toggle]  lightning; needs rain to show
   osaka-weather mood <r> <d> <n>      set all three at once
   osaka-weather clear                 all moods off
   osaka-weather cycle                 step through the good combinations
@@ -331,9 +370,13 @@ Placement (fractions of the screen, for wallpapers other than the jade city):
   osaka-weather sky groundLevel <0..1> top of the near foreground
   osaka-weather sky reset
 
-Automatic:
-  osaka-weather auto                  day or night from the local clock/sun
-  osaka-weather sync                  match the real weather outside (wttr.in)
+Automatic (persistent modes -- they keep tracking until switched off):
+  osaka-weather follow-sun [on|off]      day/night follows local sunrise/sunset
+  osaka-weather follow-weather [on|off]  mirror the real weather outside
+  osaka-weather auto                     one-shot: day or night from the sun
+  osaka-weather sync                     one-shot: match the weather now
+
+  Toggling a mood by hand releases the mode that owns it.
 
 Other:
   osaka-weather menu                  open the Omarchy weather submenu
@@ -358,10 +401,37 @@ status | "")
   usage
   ;;
 
-rain | day | night)
+rain | day | night | thunder)
   value=$(resolve_bool "$cmd" "${1:-toggle}")
-  write_state ".$cmd = $value"
+  case "$cmd" in
+  rain | thunder) write_state ".$cmd = $value | .followWeather = false" ;;
+  day | night) write_state ".$cmd = $value | .followSun = false" ;;
+  esac
   notify_state
+  ;;
+
+follow-sun | followsun)
+  value=$(resolve_bool followSun "${1:-toggle}")
+  write_state ".followSun = $value"
+  [[ $value == true ]] && apply_follow_sun
+  notify_state
+  ;;
+
+follow-weather | followweather)
+  value=$(resolve_bool followWeather "${1:-toggle}")
+  write_state ".followWeather = $value"
+  [[ $value == true ]] && apply_follow_weather
+  notify_state
+  ;;
+
+# Called on a timer by the shell plugin. Does nothing unless a mode is on, so
+# the timer can run unconditionally and stay cheap.
+tick)
+  if [[ $(get followWeather) == true ]]; then
+    OSAKA_WEATHER_QUIET=1 apply_follow_weather
+  elif [[ $(get followSun) == true ]]; then
+    OSAKA_WEATHER_QUIET=1 apply_follow_sun
+  fi
   ;;
 
 enabled | drift | parallax | grain)
@@ -434,7 +504,7 @@ sync)
   intens=1.0
   [[ $heavy == true ]] && intens=1.5
 
-  write_state ".rain=$wet | .day=$daylight | .night=$([[ $daylight == true ]] && echo false || echo true) | .wind=$windv | .intensity=$intens"
+  write_state ".rain=$wet | .thunder=$heavy | .day=$daylight | .night=$([[ $daylight == true ]] && echo false || echo true) | .wind=$windv | .intensity=$intens"
   omarchy-notification-send -g "$(glyph_for "$([[ $wet == true ]] && echo rain || ([[ $daylight == true ]] && echo day || echo night))")" \
     -t 2400 "Osaka Jade — synced" "$desc · $(mood_label)" 2>/dev/null || true
   ;;

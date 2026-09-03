@@ -34,6 +34,9 @@ Panel {
   property bool night: false
   property real intensity: 1.0
   property real wind: 0.0
+  property bool thunder: false
+  property bool followSun: false
+  property bool followWeather: false
 
   readonly property bool anyMood: fxEnabled && (rain || day || night)
 
@@ -99,6 +102,9 @@ Panel {
         root.night = cfg.night === true
         var i = Number(cfg.intensity); if (isFinite(i)) root.intensity = i
         var w = Number(cfg.wind); if (isFinite(w)) root.wind = w
+        root.thunder = cfg.thunder === true
+        root.followSun = cfg.followSun === true
+        root.followWeather = cfg.followWeather === true
       } catch (error) {
         // A half-written file is transient; keep the last good state.
       }
@@ -153,12 +159,16 @@ Panel {
           model: [
             { key: "rain",  glyph: "󰖗", label: "Rain" },
             { key: "day",   glyph: "󰖙", label: "Sunshine" },
-            { key: "night", glyph: "󰖔", label: "Night" }
+            { key: "night", glyph: "󰖔", label: "Night" },
+            { key: "thunder", glyph: "󱐋", label: "Thunder", needs: "rain" }
           ]
 
           Item {
             required property var modelData
             readonly property bool on: root[modelData.key] === true
+            // Thunder without rain shows nothing, so say so rather than
+            // letting it read as broken.
+            readonly property bool usable: !modelData.needs || root[modelData.needs] === true
 
             width: panelColumn.width
             height: Style.spacing.controlHeight
@@ -168,7 +178,7 @@ Panel {
               text: modelData.glyph
               textFormat: Text.PlainText
               color: parent.on ? Color.accent : root.barForeground
-              opacity: parent.on ? 1.0 : 0.55
+              opacity: !parent.usable ? 0.3 : (parent.on ? 1.0 : 0.55)
               font.family: root.bar ? root.bar.fontFamily : Style.font.family
               font.pixelSize: Style.font.icon
               anchors.left: parent.left
@@ -179,7 +189,7 @@ Panel {
               text: modelData.label
               textFormat: Text.PlainText
               color: root.barForeground
-              opacity: parent.on ? 1.0 : 0.7
+              opacity: !parent.usable ? 0.35 : (parent.on ? 1.0 : 0.7)
               font.family: root.bar ? root.bar.fontFamily : Style.font.family
               font.pixelSize: Style.font.body
               anchors.left: rowIcon.right
@@ -189,6 +199,8 @@ Panel {
 
             ToggleSwitch {
               checked: parent.on
+              interactive: parent.usable
+              opacity: parent.usable ? 1.0 : 0.4
               foreground: root.barForeground
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
@@ -241,17 +253,79 @@ Panel {
           foreground: root.barForeground
         }
 
-        // Presets, for the combinations worth one click rather than three.
+        PanelSectionHeader {
+          text: "Automatic"
+          foreground: root.barForeground
+          fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
+        }
+
+        // Modes rather than actions: they keep tracking until switched off.
+        // Toggling a mood by hand releases whichever mode owns it.
+        Repeater {
+          model: [
+            { cmd: "follow-sun", prop: "followSun", glyph: "󰖜",
+              label: "Follow the sun" },
+            { cmd: "follow-weather", prop: "followWeather", glyph: "󰇧",
+              label: "Match real weather" }
+          ]
+
+          Item {
+            required property var modelData
+            readonly property bool on: root[modelData.prop] === true
+
+            width: panelColumn.width
+            height: Style.spacing.controlHeight
+
+            Text {
+              id: modeIcon
+              text: modelData.glyph
+              textFormat: Text.PlainText
+              color: parent.on ? Color.accent : root.barForeground
+              opacity: parent.on ? 1.0 : 0.55
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.icon
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+              text: modelData.label
+              textFormat: Text.PlainText
+              color: root.barForeground
+              opacity: parent.on ? 1.0 : 0.7
+              font.family: root.bar ? root.bar.fontFamily : Style.font.family
+              font.pixelSize: Style.font.body
+              anchors.left: modeIcon.right
+              anchors.leftMargin: Style.space(10)
+              anchors.verticalCenter: parent.verticalCenter
+            }
+
+            ToggleSwitch {
+              checked: parent.on
+              foreground: root.barForeground
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              onToggled: root.run(modelData.cmd)
+            }
+          }
+        }
+
+        PanelSeparator {
+          width: panelColumn.width
+          foreground: root.barForeground
+        }
+
+        // Genuinely one-shot: these set a combination and are done.
         Row {
           spacing: Style.spacing.controlGap
 
           Repeater {
             model: [
-              { cmd: "clear",       glyph: "󰅖", tip: "Clear — all moods off" },
-              { cmd: "storm",       glyph: "󰙾", tip: "Storm — heavy rain at night" },
-              { cmd: "goldenhour",  glyph: "󰖚", tip: "Golden hour — sun and stars" },
-              { cmd: "sync",        glyph: "󰖝", tip: "Match the real weather outside" },
-              { cmd: "auto",        glyph: "󰃰", tip: "Follow the local sunrise and sunset" }
+              { cmd: "clear",      glyph: "󰅖", tip: "Clear — all moods off" },
+              { cmd: "storm",      glyph: "󰖓", tip: "Storm — heavy rain and thunder at night" },
+              { cmd: "shower",     glyph: "󰖗", tip: "Rain — no thunder" },
+              { cmd: "goldenhour", glyph: "󰖚", tip: "Golden hour — sun and stars" },
+              { cmd: "noir",       glyph: "󰖔", tip: "Night — stars and fireflies" }
             ]
 
             PanelActionButton {

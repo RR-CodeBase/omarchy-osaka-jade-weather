@@ -22,11 +22,17 @@ Item {
   property bool rain: false
   property bool day: false
   property bool night: false
+  property bool thunder: false   // lightning; a storm, not plain rain
   property real intensity: 1.0   // 0.2 .. 2.0, scales particle counts
   property real wind: 0.0        // -1 .. 1, rain slant
   property bool drift: true      // slow ken-burns push on the photo
   property bool parallax: true   // photo leans away from the pointer
   property bool grain: true
+
+  // Persistent automatic modes. The CLI owns what each one sets; this just
+  // asks it to tick.
+  property bool followSun: false
+  property bool followWeather: false
 
   // --- sky placement ------------------------------------------------------
   // Fractions of the panel rather than pixels, so the weather composes onto
@@ -54,6 +60,8 @@ Item {
   readonly property bool rainOn: fxEnabled && rain
   readonly property bool dayOn: fxEnabled && day
   readonly property bool nightOn: fxEnabled && night
+  // Thunder is a modifier on rain, not a mood of its own -- no rain, no storm.
+  readonly property bool thunderOn: fxEnabled && rain && thunder
   readonly property int moodCount: (rainOn ? 1 : 0) + (dayOn ? 1 : 0) + (nightOn ? 1 : 0)
   readonly property bool anyMood: moodCount > 0
   readonly property real amount: Math.max(0.2, Math.min(2.0, intensity))
@@ -133,6 +141,30 @@ Item {
     NumberAnimation { from: 1; to: 0; duration: 143000; easing.type: Easing.InOutSine }
   }
 
+  // --- automatic modes ----------------------------------------------------
+  readonly property string cliPath:
+    Qt.resolvedUrl("bin/osaka-weather").toString().replace(/^file:\/\//, "")
+
+  Process {
+    id: tickProc
+    command: [state.cliPath, "tick"]
+  }
+
+  function tick() {
+    if (!tickProc.running) tickProc.running = true
+  }
+
+  Timer {
+    id: modeTimer
+    // Five minutes is finer than sunrise needs and coarser than wttr's own
+    // 15-minute cache, so `tick` mostly costs a date comparison.
+    interval: 5 * 60 * 1000
+    repeat: true
+    running: state.fxEnabled && (state.followSun || state.followWeather)
+    triggeredOnStart: true
+    onTriggered: state.tick()
+  }
+
   // --- persistence --------------------------------------------------------
   function bool_(value, fallback) {
     if (value === undefined || value === null) return fallback
@@ -163,9 +195,12 @@ Item {
     rain = bool_(cfg.rain, false)
     day = bool_(cfg.day, false)
     night = bool_(cfg.night, false)
+    thunder = bool_(cfg.thunder, false)
     drift = bool_(cfg.drift, true)
     parallax = bool_(cfg.parallax, true)
     grain = bool_(cfg.grain, true)
+    followSun = bool_(cfg.followSun, false)
+    followWeather = bool_(cfg.followWeather, false)
     intensity = num_(cfg.intensity, 1.0)
     wind = Math.max(-1, Math.min(1, num_(cfg.wind, 0.0)))
 
@@ -183,8 +218,9 @@ Item {
 
   function defaultsJson() {
     return JSON.stringify({
-      enabled: true, rain: false, day: false, night: true,
+      enabled: true, rain: false, day: false, night: true, thunder: false,
       intensity: 1.0, wind: 0.0, drift: true, parallax: true, grain: true,
+      followSun: false, followWeather: false,
       sky: {
         sunX: 0.60, sunY: 0.14, sunSize: 0.95,
         moonX: 0.60, moonY: 0.11, moonSize: 0.52,
@@ -223,6 +259,7 @@ Item {
     function status(): string {
       return JSON.stringify({
         enabled: state.fxEnabled, rain: state.rain, day: state.day, night: state.night,
+        thunder: state.thunder,
         intensity: state.intensity, wind: state.wind,
         drift: state.drift, parallax: state.parallax, grain: state.grain
       })

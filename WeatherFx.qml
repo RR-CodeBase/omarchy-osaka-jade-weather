@@ -20,6 +20,7 @@ Item {
   readonly property bool rainOn: st ? st.rainOn : false
   readonly property bool dayOn: st ? st.dayOn : false
   readonly property bool nightOn: st ? st.nightOn : false
+  readonly property bool thunderOn: st ? st.thunderOn : false
   readonly property real amount: st ? st.amount : 1.0
   readonly property real wind: st ? st.wind : 0.0
   readonly property bool grainOn: st ? (st.fxEnabled && st.grain) : false
@@ -439,7 +440,7 @@ Item {
   Item {
     id: storm
     anchors.fill: parent
-    visible: fx.rainOn
+    visible: fx.thunderOn
 
     Rectangle {
       id: bolt

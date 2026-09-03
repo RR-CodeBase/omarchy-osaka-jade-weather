@@ -100,9 +100,10 @@ the plugin otherwise. `omarchy plugin add` names it that way for you.
 
 | | |
 |---|---|
-| 󰖗 `rain` | two rain curtains at different depths, thickened mist, ground splashes, distant lightning, a wet desaturated grade |
+| 󰖗 `rain` | two rain curtains at different depths, thickened mist, ground splashes, a wet desaturated grade |
 | 󰖙 `day` | warm grade, sun disc, seven swaying god rays, drifting dust motes |
 | 󰖔 `night` | cool grade, moon, ninety twinkling stars, fireflies over the rooftops |
+| 󱐋 `thunder` | distant lightning behind the towers. A modifier on rain, not a mood — rain alone is just rain |
 
 Combinations are real states, not collisions. The colour grade **averages** the
 active moods rather than summing them, so `rain + day` lands on "overcast
@@ -118,13 +119,28 @@ rain + day    → Sun Shower       all three    → Everything At Once
 ```bash
 osaka-weather                 # what's on
 osaka-weather rain            # toggle
-osaka-weather night on        # set explicitly
+osaka-weather thunder on      # lightning, on top of rain
 osaka-weather storm           # preset
 osaka-weather cycle           # step through the good combinations
-osaka-weather auto            # day or night from the local sunrise/sunset
-osaka-weather sync            # match the real weather outside (wttr.in)
 osaka-weather --help
 ```
+
+### Automatic modes
+
+Two settings that keep tracking rather than firing once:
+
+```bash
+osaka-weather follow-sun on       # day/night follows local sunrise and sunset
+osaka-weather follow-weather on   # mirror the weather outside (wttr.in)
+```
+
+They check every five minutes and compose: `follow-sun` owns day and night,
+`follow-weather` owns rain, thunder, wind and intensity. **Toggling a mood by
+hand releases whichever mode owns it**, so a manual change is never silently
+undone on the next tick.
+
+One-shot equivalents remain if you want the result without the tracking:
+`osaka-weather auto` and `osaka-weather sync`.
 
 Keybindings, if you ran `install.sh`:
 

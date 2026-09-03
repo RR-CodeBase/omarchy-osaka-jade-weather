@@ -63,17 +63,26 @@
     "description": "Sun and stars at once",
     "action": "osaka-weather goldenhour"
   },
-  "osaka-weather.sync": {
-    "icon": "󰖝",
-    "label": "Match Real Weather",
-    "description": "Set the mood from what it is actually doing outside",
-    "action": "osaka-weather sync"
+  "osaka-weather.thunder": {
+      "icon": "󱐋",
+      "label": "Thunder",
+      "description": "Lightning; needs rain to show",
+      "action": "osaka-weather thunder",
+      "checked": "test \"$(osaka-weather status --json | jq -r .thunder)\" = true"
   },
-  "osaka-weather.auto": {
-    "icon": "󰃰",
-    "label": "Follow The Sun",
-    "description": "Day or night from the local sunrise and sunset",
-    "action": "osaka-weather auto"
+  "osaka-weather.follow-sun": {
+      "icon": "󰖜",
+      "label": "Follow The Sun",
+      "description": "Keep day and night tracking the local sunrise and sunset",
+      "action": "osaka-weather follow-sun",
+      "checked": "test \"$(osaka-weather status --json | jq -r .followSun)\" = true"
+  },
+  "osaka-weather.follow-weather": {
+      "icon": "󰇧",
+      "label": "Match Real Weather",
+      "description": "Keep mirroring the weather outside",
+      "action": "osaka-weather follow-weather",
+      "checked": "test \"$(osaka-weather status --json | jq -r .followWeather)\" = true"
   }
   // <<< osaka-jade-weather <<<
 }

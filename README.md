@@ -1,3 +1,30 @@
+> [!IMPORTANT]
+> **This project has moved to
+> [RR-CodeBase/omarchy-wallpaper-weather](https://github.com/RR-CodeBase/omarchy-wallpaper-weather).**
+>
+> It was renamed because it stopped being Osaka-specific. The colours now follow
+> your theme instead of a hardcoded jade palette, and it measures whatever
+> wallpaper you have set to work out where the sky is — so tying the name to one
+> photograph no longer described it. The Osaka Jade theme lives on there as an
+> optional bundled preset.
+>
+> This repository is archived and will not receive updates.
+>
+> **If you installed from here**, switch over with:
+>
+> ```bash
+> cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
+> ./install.sh --uninstall
+> cd ~ && omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
+> omarchy plugin add https://github.com/RR-CodeBase/omarchy-wallpaper-weather.git --enable
+> cd ~/.config/omarchy/plugins/io.github.rr-codebase.wallpaper-weather && ./install.sh
+> ```
+>
+> Your moods, dials and sky placement are migrated across on install; nothing is
+> lost.
+
+---
+
 # Osaka Jade Weather
 
 Live weather for your Omarchy wallpaper. Rain, sunshine and night are three

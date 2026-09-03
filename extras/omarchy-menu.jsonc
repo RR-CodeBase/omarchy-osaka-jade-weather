@@ -1,12 +1,18 @@
 // Osaka Jade Weather -- Omarchy menu rows.
 //
 // Paste these keys into your ~/.config/omarchy/extensions/omarchy-menu.jsonc,
-// inside the existing top-level object. The file hot-reloads on save.
+// inside the existing top-level object -- markers included. The file
+// hot-reloads on save.
+//
+// Keep the two marker comments: `install.sh --uninstall` uses them to take
+// exactly these rows back out again without touching anything else you have
+// added to that file.
 //
 // The ids are namespaced so they never collide with Omarchy's own weather
 // forecast rows, and `checked` reads the live state file, so the tick marks
 // are always the truth rather than a cached guess.
 {
+  // >>> osaka-jade-weather >>>
   "osaka-weather": {
     "icon": "󰖐",
     "label": "Osaka Jade Weather",
@@ -69,4 +75,5 @@
     "description": "Day or night from the local sunrise and sunset",
     "action": "osaka-weather auto"
   }
+  // <<< osaka-jade-weather <<<
 }

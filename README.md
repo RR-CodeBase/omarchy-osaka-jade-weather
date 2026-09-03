@@ -92,15 +92,14 @@ omarchy plugin enable omarchy.background   # hand the wallpaper back to Omarchy
 cd ~ && omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
 ```
 
-Two things the uninstaller deliberately does not do:
+That removes the menu rows too, provided you pasted them with their marker
+comments. It deletes the marked line range rather than rewriting the file, so
+your own entries and comments survive, and it restores a backup if the result
+would not parse. Rows pasted without the markers are reported, not guessed at.
 
-* **Menu rows** are removed by hand. They live in
-  `~/.config/omarchy/extensions/omarchy-menu.jsonc` alongside your own entries,
-  and rewriting that file would strip your comments — so the uninstaller names
-  the keys to delete instead of editing it. Every one starts `osaka-weather`.
-* **State is kept.** `~/.local/state/omarchy/weather-fx.json` survives, so a
-  reinstall picks up your moods, dials and sky placement. Delete it for a clean
-  slate.
+**State is kept.** `~/.local/state/omarchy/weather-fx.json` survives, so a
+reinstall picks up your moods, dials and sky placement. Delete it for a clean
+slate.
 
 Note that `omarchy plugin remove` deletes the plugin directory — including its
 git checkout if you cloned it. Nothing is lost that is not on GitHub, and
@@ -158,8 +157,13 @@ to `~/.config/omarchy/shell.json`, in whichever section you want:
 
 `extras/omarchy-menu.jsonc` holds a ready-made **Osaka Jade Weather** submenu —
 the three toggles with live tick marks, the presets, and the two automatic
-modes. Paste its keys into your own
-`~/.config/omarchy/extensions/omarchy-menu.jsonc`; the file hot-reloads on save.
+modes. Paste its contents into your own
+`~/.config/omarchy/extensions/omarchy-menu.jsonc`, inside the top-level object;
+the file hot-reloads on save.
+
+**Keep the two marker comments.** `install.sh --uninstall` uses them to take
+exactly these rows back out later without disturbing anything else in that
+file.
 
 The ids are namespaced (`osaka-weather.*`) so they never collide with Omarchy's
 own weather forecast rows, and each toggle's `checked` condition reads the live

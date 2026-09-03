@@ -119,6 +119,41 @@ LUA
   echo "Done. Try:  osaka-weather --help"
 }
 
+# ------------------------------------------------------------- menu rows --
+
+remove_menu_rows() {
+  [[ -f $MENU ]] || return 0
+  if ! grep -q "osaka-jade-weather >>>" "$MENU"; then
+    if grep -q '"osaka-weather' "$MENU"; then
+      say "ACTION NEEDED  menu rows present but without the marker comments, so"
+      say "               they cannot be removed safely. Delete the keys starting"
+      say "               \"osaka-weather\" from $MENU"
+    fi
+    return 0
+  fi
+
+  if (( DRY )); then
+    say "would: remove the marked menu rows from $MENU"
+    return 0
+  fi
+
+  cp -- "$MENU" "$MENU.osaka-bak"
+  python3 - "$MENU" <<'PYEOF' || { mv -f -- "$MENU.osaka-bak" "$MENU"; say "menu rows left alone (removal would have broken the file)"; return 0; }
+import json, pathlib, re, sys
+p = pathlib.Path(sys.argv[1])
+lines = p.read_text().splitlines(keepends=True)
+begin = next(i for i, l in enumerate(lines) if "osaka-jade-weather >>>" in l)
+end = next(i for i, l in enumerate(lines) if "osaka-jade-weather <<<" in l)
+text = "".join(lines[:begin] + lines[end + 1:])
+# A trailing comma before the closing brace is invalid once our block is gone.
+text = re.sub(r",(\s*)\n(\s*(?://[^\n]*\n\s*)*)\}", r"\1\n\2}", text, count=1)
+json.loads(re.sub(r"^\s*//.*$", "", text, flags=re.M))
+p.write_text(text)
+PYEOF
+  rm -f -- "$MENU.osaka-bak"
+  say "removed menu rows"
+}
+
 # -------------------------------------------------------------- uninstall --
 
 uninstall_all() {
@@ -148,12 +183,7 @@ uninstall_all() {
     say "removed theme hook"
   fi
 
-  if [[ -f $MENU ]] && grep -q '"osaka-weather' "$MENU"; then
-    say "ACTION NEEDED  menu rows are in a file you share with your own entries,"
-    say "               so they are not removed automatically. Delete the keys"
-    say "               starting \"osaka-weather\" from:"
-    say "               $MENU"
-  fi
+  remove_menu_rows
 
   echo
   echo "The plugin itself is untouched. Remove it with:"

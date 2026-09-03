@@ -205,5 +205,8 @@ needed for `osaka-weather sync`. Qt's `QtQuick.Particles`, `QtQuick.Effects` and
 
 ## Licence
 
-MIT. `Background.qml` is a derivative of Omarchy's own `omarchy.background`
-plugin, also MIT — see [LICENSE](LICENSE) for the attribution.
+MIT — see [LICENSE](LICENSE).
+
+`Background.qml` is a derivative of Omarchy's own `omarchy.background` plugin,
+also MIT. [NOTICE](NOTICE) records exactly which parts come from Omarchy and
+which were added here.

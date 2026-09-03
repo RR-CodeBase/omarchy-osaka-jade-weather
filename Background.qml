@@ -5,7 +5,7 @@
 // handling are Omarchy's; this file adds the drift/parallax transform and the
 // mood colour grade around them, and mounts WeatherState and WeatherFx.
 //
-// See LICENSE for the full attribution.
+// See NOTICE for the full attribution, and LICENSE for the MIT terms.
 
 import Quickshell
 import Quickshell.Io

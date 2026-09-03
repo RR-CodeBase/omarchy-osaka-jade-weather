@@ -26,6 +26,10 @@ HOOK="$HOME/.config/omarchy/hooks/theme-set.d/osaka-weather.hook"
 SHELLJSON="$HOME/.config/omarchy/shell.json"
 PLUGIN_ID="io.github.rr-codebase.osaka-jade-weather"
 WIDGET_SECTION="${OSAKA_WEATHER_SECTION:-right}"
+THEME_SLUG="osaka-jade-weather"
+THEME_DIR="$HOME/.config/omarchy/themes/$THEME_SLUG"
+STOCK_THEME="${OMARCHY_PATH:-/usr/share/omarchy}/themes/osaka-jade"
+THEME_MARKER="$THEME_DIR/.installed-by-osaka-jade-weather"
 
 MARK_BEGIN="-- >>> osaka-jade-weather >>>"
 MARK_END="-- <<< osaka-jade-weather <<<"
@@ -34,12 +38,14 @@ DRY=0
 MODE=install
 WANT_HOOK=0
 WANT_WIDGET=1
+WANT_THEME=1
 for arg in "$@"; do
   case "$arg" in
   --dry-run) DRY=1 ;;
   --uninstall) MODE=uninstall ;;
   --with-theme-hook) WANT_HOOK=1 ;;
   --no-widget) WANT_WIDGET=0 ;;
+  --no-theme) WANT_THEME=0 ;;
   -h | --help)
     cat <<'USAGE'
 Optional desktop integration for the Osaka Jade Weather plugin.
@@ -47,10 +53,11 @@ Optional desktop integration for the Osaka Jade Weather plugin.
 The plugin itself works as soon as Omarchy loads it. This wires up the parts a
 plugin install cannot, because they live in files that belong to you.
 
-Usage: ./install.sh [--dry-run] [--no-widget] [--with-theme-hook] [--uninstall]
+Usage: ./install.sh [--dry-run] [--no-widget] [--no-theme] [--with-theme-hook] [--uninstall]
 
-  (default)           PATH symlink, bash completion, keybindings, bar widget
+  (default)           PATH symlink, completion, keybindings, bar widget, theme
   --no-widget         skip the bar widget
+  --no-theme          skip the Osaka Jade Weather theme
   --with-theme-hook   park the weather when you switch away from its theme
   --dry-run           print the plan, change nothing
   --uninstall         remove exactly what was installed
@@ -117,6 +124,12 @@ LUA
     say "SKIP  $BINDINGS not found"
   fi
 
+  if (( WANT_THEME )); then
+    add_theme
+  else
+    say "SKIP  theme (--no-theme)"
+  fi
+
   if (( WANT_WIDGET )); then
     add_widget
   else
@@ -146,6 +159,54 @@ LUA
   }
   echo
   echo "Done. Try:  osaka-weather --help"
+}
+
+# ---------------------------------------------------------------- theme --
+
+# Built from Omarchy's own osaka-jade theme, which is already on the machine,
+# rather than shipped in this repo: no redistributing 3.6MB of someone else's
+# wallpapers, and no drift when they update them.
+#
+# Its whole reason to exist is the trimmed backgrounds directory. The sky
+# placement defaults are composed for Glowing City, so a theme carrying only
+# that background can never leave the moon sitting inside a building.
+add_theme() {
+  if [[ ! -d $STOCK_THEME ]]; then
+    say "SKIP  theme (stock osaka-jade not found at $STOCK_THEME)"
+    return 0
+  fi
+  if [[ -e $THEME_DIR ]]; then say "SKIP  theme already installed"; return 0; fi
+  if (( DRY )); then say "would: build the '$THEME_SLUG' theme from $STOCK_THEME"; return 0; fi
+
+  cp -aL -- "$STOCK_THEME" "$THEME_DIR"
+  chmod -R u+w -- "$THEME_DIR"
+  find "$THEME_DIR/backgrounds" -type f ! -name '1-glowing-city.jpg' -delete 2>/dev/null || true
+  ( cd "$THEME_DIR" && find . -type f ! -name '.installed-by-*' -exec sha256sum {} + | sort ) >"$THEME_MARKER"
+  say "theme installed -- apply it with: omarchy theme set \"Osaka Jade Weather\""
+}
+
+remove_theme() {
+  [[ -d $THEME_DIR ]] || return 0
+  if [[ ! -f $THEME_MARKER ]]; then
+    say "SKIP  theme was not installed by this script -- leaving it alone"
+    return 0
+  fi
+  # Never delete edits. If anything differs from what was generated, keep it.
+  local now
+  now=$( cd "$THEME_DIR" && find . -type f ! -name '.installed-by-*' -exec sha256sum {} + | sort )
+  if [[ $now != "$(cat "$THEME_MARKER")" ]]; then
+    say "KEPT  theme has your own changes -- remove it by hand if you want it gone"
+    return 0
+  fi
+  if (( DRY )); then say "would: remove the '$THEME_SLUG' theme"; return 0; fi
+
+  # Removing the active theme would leave the desktop with nothing to render.
+  if [[ "$(omarchy theme current 2>/dev/null)" == "Osaka Jade Weather" ]]; then
+    omarchy theme set osaka-jade >/dev/null 2>&1 || true
+    say "switched back to the Osaka Jade theme"
+  fi
+  rm -rf -- "$THEME_DIR"
+  say "removed theme"
 }
 
 # ----------------------------------------------------------- bar widget --
@@ -282,6 +343,7 @@ uninstall_all() {
 
   remove_widget
   remove_menu_rows
+  remove_theme
 
   echo
   echo "The plugin itself is untouched. Remove it with:"

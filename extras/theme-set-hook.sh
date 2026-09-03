@@ -14,7 +14,7 @@ set -euo pipefail
 
 # The theme this plugin's weather belongs to. Change it if you tuned the sky
 # placement for a different theme's wallpaper.
-THEME_SLUG="${OSAKA_WEATHER_THEME:-osaka-jade}"
+THEME_SLUG="${OSAKA_WEATHER_THEME:-osaka-jade-weather}"
 
 THEME="${1:-}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/weather-fx.json"

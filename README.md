@@ -24,6 +24,7 @@ install cannot do for itself, because it lives in files that belong to you:
 * `osaka-weather` on your PATH, and bash completion for it
 * `SUPER+ALT+R` / `D` / `N` / `W` keybindings
 * the **bar widget**, placed in the right-hand section
+* the **Osaka Jade Weather theme** (see below)
 
 `install.sh` is idempotent, skips anything already present, and only ever edits
 a file inside a marked block it created. `--dry-run` shows exactly what it would
@@ -32,6 +33,7 @@ touch; `--uninstall` reverses precisely that.
 | Flag | Effect |
 |---|---|
 | `--no-widget` | do not add the bar widget |
+| `--no-theme` | do not build the Osaka Jade Weather theme |
 | `--with-theme-hook` | park the weather when you switch away from its theme |
 | `--dry-run` | print the plan, change nothing |
 
@@ -140,6 +142,33 @@ to `~/.config/omarchy/shell.json`, in whichever section you want:
 ```jsonc
 "right": [ { "id": "io.github.rr-codebase.osaka-jade-weather" }, ... ]
 ```
+
+## The theme
+
+`install.sh` builds a theme called **Osaka Jade Weather** and leaves it for you
+to apply:
+
+```bash
+omarchy theme set "Osaka Jade Weather"
+```
+
+It is Omarchy's own *Osaka Jade* theme with the backgrounds trimmed to
+**Glowing City** alone. That trimming is the entire point: the sky placement
+defaults are composed for that photograph, so a theme that cannot cycle to a
+different one can never leave the moon sitting inside a building. Same colours,
+same everything else.
+
+It is generated at install time from the copy already on your machine rather
+than shipped in this repo — no redistributing several megabytes of someone
+else's wallpapers, and no drift when Omarchy updates them.
+
+`--uninstall` removes it, but only if you have not touched it: the installer
+records a checksum of what it generated, and keeps the theme if anything
+differs. If it is the active theme at the time, you are switched back to stock
+Osaka Jade first so the desktop always has something to render.
+
+Prefer the full set of backgrounds? Use stock `osaka-jade` with `--no-theme`,
+and retune with `osaka-weather sky` when you change wallpaper.
 
 ## Bar widget
 

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Particles
 import QtQuick.Effects
+import qs.Commons
 
 // Per-screen weather overlay for the Osaka Jade city wallpaper.
 //
@@ -36,12 +37,19 @@ Item {
   readonly property real discSize: st ? (dayOn ? st.sunSize : st.moonSize) : 0.95
   readonly property real nearBand: (1 - groundLevel) * 0.8
 
-  // Jade palette, lifted from the theme's colors.toml so the weather belongs
-  // to the same city as the photograph.
-  readonly property color jade: "#2DD5B7"
-  readonly property color jadeSoft: "#8CD3CB"
-  readonly property color jadeGreen: "#63b07a"
-  readonly property color gold: "#F7E8B2"
+  // Two kinds of colour here, and they are not the same kind.
+  //
+  // Sunlight is warm and moonlight is cold on anyone's wallpaper, so the sky
+  // tints and the sun and moon discs stay physical -- theming those would make
+  // a sunrise the wrong colour to match a terminal palette.
+  //
+  // What follows the theme is the life in the scene: fireflies take the accent,
+  // and rain takes an ambient tint off the foreground, because rain is water
+  // and picks up whatever light is around it.
+  readonly property color sparkColor: Color.accent
+  readonly property color rainFar: Color.foreground
+  readonly property color rainNear: Qt.lighter(Color.foreground, 1.25)
+  readonly property color moteColor: "#F7E8B2"   // sunlit dust is warm anywhere
 
   clip: true
 
@@ -363,7 +371,7 @@ Item {
     Behavior on opacity { NumberAnimation { duration: 2600; easing.type: Easing.InOutCubic } }
     source: Qt.resolvedUrl("assets/raindrop.png")
     autoRotation: true
-    color: fx.jadeSoft
+    color: fx.rainFar
     colorVariation: 0.15
     alpha: 0.22
     alphaVariation: 0.11
@@ -400,7 +408,7 @@ Item {
     Behavior on opacity { NumberAnimation { duration: 2600; easing.type: Easing.InOutCubic } }
     source: Qt.resolvedUrl("assets/raindrop.png")
     autoRotation: true
-    color: "#cdeee6"
+    color: fx.rainNear
     colorVariation: 0.10
     alpha: 0.38
     alphaVariation: 0.16
@@ -430,7 +438,7 @@ Item {
     visible: opacity > 0.001
     Behavior on opacity { NumberAnimation { duration: 1200; easing.type: Easing.InOutCubic } }
     source: Qt.resolvedUrl("assets/glow.png")
-    color: fx.jadeSoft
+    color: fx.rainFar
     colorVariation: 0.2
     alpha: 0.18
     alphaVariation: 0.10
@@ -530,7 +538,7 @@ Item {
     opacity: fx.nightOn ? 1 : 0
     visible: opacity > 0.001
     Behavior on opacity { NumberAnimation { duration: 3400; easing.type: Easing.InOutCubic } }
-    color: fx.jadeGreen
+    color: fx.sparkColor
     colorVariation: 0.35
     alpha: 0.70
     alphaVariation: 0.30
@@ -571,7 +579,7 @@ Item {
     opacity: fx.dayOn ? 1 : 0
     visible: opacity > 0.001
     Behavior on opacity { NumberAnimation { duration: 3400; easing.type: Easing.InOutCubic } }
-    color: fx.gold
+    color: fx.moteColor
     colorVariation: 0.2
     alpha: 0.40
     alphaVariation: 0.20

@@ -215,6 +215,18 @@ The ids are namespaced (`osaka-weather.*`) so they never collide with Omarchy's
 own weather forecast rows, and each toggle's `checked` condition reads the live
 state file rather than caching, so the ticks are always accurate.
 
+## Colours
+
+Two kinds, deliberately treated differently.
+
+The **sky tints and the sun and moon are physical**: sunlight is warm and
+moonlight is cold on anyone's wallpaper, so those stay fixed. Theming them would
+mean rendering a sunrise the wrong colour to match a terminal palette.
+
+The **accent life follows your theme**: fireflies take `Color.accent`, and rain
+takes an ambient tint off `Color.foreground`, because rain is water and picks up
+whatever light is around it. Switch themes and the weather follows.
+
 ## Tuning it to your wallpaper
 
 The defaults are composed for the Osaka Jade *Glowing City* background: the moon

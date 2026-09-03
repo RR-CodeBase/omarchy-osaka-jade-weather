@@ -172,10 +172,19 @@ and retune with `osaka-weather sky` when you change wallpaper.
 
 ## Bar widget
 
-`install.sh` puts it in the right-hand section by default. The icon shows the
-current mood; **click** cycles, **right-click** toggles rain, **middle-click**
-clears, **scroll** changes intensity. It reads the state file directly, so it
-stays in step with the CLI, the keybindings and the menu without polling.
+One icon in the bar, and a panel behind it built the way Omarchy's own audio and
+network panels are:
+
+* a **switch per mood** — they are independent and stack, so switches rather
+  than a radio group
+* **intensity** and **wind** sliders
+* one-click **presets**: clear, storm, golden hour, match the real weather,
+  follow the sun
+
+The bar icon shows what is on at a glance, and **scrolling it changes intensity
+without opening anything**. Middle-click clears.
+
+`install.sh` places it in the right-hand section by default:
 
 ```bash
 ./install.sh --no-widget                      # skip it
@@ -183,12 +192,11 @@ OSAKA_WEATHER_SECTION=center ./install.sh     # or put it elsewhere
 ```
 
 To move or remove it later, edit `bar.layout` in `~/.config/omarchy/shell.json`;
-it hot-reloads on save.
+it hot-reloads on save. The panel can also be summoned without the bar:
 
-Worth knowing if you are reading the manifest and wondering why `install.sh`
-does this at all: `omarchy plugin enable` will not place the widget, because
-this plugin registers as a *service* as well as a widget and the service entry
-claims the slot.
+```bash
+omarchy-shell io.github.rr-codebase.osaka-jade-weather toggle
+```
 
 ## Omarchy menu
 

@@ -23,6 +23,9 @@ COMPLETION="$HOME/.local/share/bash-completion/completions/osaka-weather"
 BINDINGS="$HOME/.config/hypr/bindings.lua"
 MENU="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
 HOOK="$HOME/.config/omarchy/hooks/theme-set.d/osaka-weather.hook"
+SHELLJSON="$HOME/.config/omarchy/shell.json"
+PLUGIN_ID="io.github.rr-codebase.osaka-jade-weather"
+WIDGET_SECTION="${OSAKA_WEATHER_SECTION:-right}"
 
 MARK_BEGIN="-- >>> osaka-jade-weather >>>"
 MARK_END="-- <<< osaka-jade-weather <<<"
@@ -30,14 +33,34 @@ MARK_END="-- <<< osaka-jade-weather <<<"
 DRY=0
 MODE=install
 WANT_HOOK=0
+WANT_WIDGET=1
 for arg in "$@"; do
   case "$arg" in
   --dry-run) DRY=1 ;;
   --uninstall) MODE=uninstall ;;
   --with-theme-hook) WANT_HOOK=1 ;;
+  --no-widget) WANT_WIDGET=0 ;;
   -h | --help)
-    sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
-    echo "Usage: ./install.sh [--dry-run] [--with-theme-hook] [--uninstall]"
+    cat <<'USAGE'
+Optional desktop integration for the Osaka Jade Weather plugin.
+
+The plugin itself works as soon as Omarchy loads it. This wires up the parts a
+plugin install cannot, because they live in files that belong to you.
+
+Usage: ./install.sh [--dry-run] [--no-widget] [--with-theme-hook] [--uninstall]
+
+  (default)           PATH symlink, bash completion, keybindings, bar widget
+  --no-widget         skip the bar widget
+  --with-theme-hook   park the weather when you switch away from its theme
+  --dry-run           print the plan, change nothing
+  --uninstall         remove exactly what was installed
+
+Environment:
+  OSAKA_WEATHER_SECTION   bar section for the widget (default: right)
+
+Menu rows are not added automatically -- they share a file with your own
+entries. Paste extras/omarchy-menu.jsonc, markers included.
+USAGE
     exit 0
     ;;
   *)
@@ -94,6 +117,12 @@ LUA
     say "SKIP  $BINDINGS not found"
   fi
 
+  if (( WANT_WIDGET )); then
+    add_widget
+  else
+    say "SKIP  bar widget (--no-widget)"
+  fi
+
   if (( WANT_HOOK )); then
     run "mkdir -p '$(dirname "$HOOK")'"
     run "install -m 0755 '$HERE/extras/theme-set-hook.sh' '$HOOK'"
@@ -117,6 +146,51 @@ LUA
   }
   echo
   echo "Done. Try:  osaka-weather --help"
+}
+
+# ----------------------------------------------------------- bar widget --
+
+widget_present() {
+  [[ -f $SHELLJSON ]] && jq -e --arg id "$PLUGIN_ID" \
+    '[.bar.layout[]?[]?.id] | index($id) != null' "$SHELLJSON" >/dev/null 2>&1
+}
+
+add_widget() {
+  [[ -f $SHELLJSON ]] || { say "SKIP  $SHELLJSON not found"; return 0; }
+  if widget_present; then say "SKIP  bar widget already placed"; return 0; fi
+  if (( DRY )); then say "would: add the bar widget to the '$WIDGET_SECTION' section"; return 0; fi
+
+  cp -- "$SHELLJSON" "$SHELLJSON.osaka-bak"
+  if jq --arg id "$PLUGIN_ID" --arg sec "$WIDGET_SECTION" \
+      '.bar.layout[$sec] = ([{id: $id}] + (.bar.layout[$sec] // []))' \
+      "$SHELLJSON.osaka-bak" >"$SHELLJSON.tmp" && jq -e . "$SHELLJSON.tmp" >/dev/null; then
+    mv -f -- "$SHELLJSON.tmp" "$SHELLJSON"
+    rm -f -- "$SHELLJSON.osaka-bak"
+    say "bar widget added to the '$WIDGET_SECTION' section"
+  else
+    rm -f -- "$SHELLJSON.tmp"
+    mv -f -- "$SHELLJSON.osaka-bak" "$SHELLJSON"
+    say "bar widget NOT added (edit would have broken $SHELLJSON)"
+  fi
+}
+
+remove_widget() {
+  [[ -f $SHELLJSON ]] || return 0
+  widget_present || return 0
+  if (( DRY )); then say "would: remove the bar widget from $SHELLJSON"; return 0; fi
+
+  cp -- "$SHELLJSON" "$SHELLJSON.osaka-bak"
+  if jq --arg id "$PLUGIN_ID" \
+      '.bar.layout |= with_entries(.value |= map(select(.id != $id)))' \
+      "$SHELLJSON.osaka-bak" >"$SHELLJSON.tmp" && jq -e . "$SHELLJSON.tmp" >/dev/null; then
+    mv -f -- "$SHELLJSON.tmp" "$SHELLJSON"
+    rm -f -- "$SHELLJSON.osaka-bak"
+    say "removed bar widget"
+  else
+    rm -f -- "$SHELLJSON.tmp"
+    mv -f -- "$SHELLJSON.osaka-bak" "$SHELLJSON"
+    say "bar widget left in place (edit would have broken $SHELLJSON)"
+  fi
 }
 
 # ------------------------------------------------------------- menu rows --
@@ -183,6 +257,7 @@ uninstall_all() {
     say "removed theme hook"
   fi
 
+  remove_widget
   remove_menu_rows
 
   echo

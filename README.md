@@ -10,32 +10,79 @@ Everything is real-time QML drawn straight onto the background layer. No video,
 no animated GIF, no second wallpaper daemon. With all three toggles off it is a
 still photograph with a very slow drift, and costs essentially nothing.
 
-## Read this first: it replaces your background renderer
-
-This plugin declares `clonedFrom: omarchy.background`, which means Omarchy
-**disables its own background plugin and uses this one instead** while it is
-enabled. That is not incidental — the day/night colour grade is applied to the
-photograph itself, so the plugin has to own the layer the photo is drawn on. An
-overlay-only version could draw rain, but could never turn night into morning.
-
-Going back is one command, and your wallpaper settings are untouched:
-
-```bash
-omarchy plugin enable omarchy.background
-```
-
 ## Install
 
 ```bash
 omarchy plugin add https://github.com/RR-CodeBase/omarchy-osaka-jade-weather.git --enable
+cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
+./install.sh
 ```
 
-That is the whole install — the weather layer is live as soon as the shell
-picks it up. (`plugin add` is for first installs only; it refuses an id that is
-already present and points you at `plugin update`.)
+The first command is the plugin. The second is the desktop wiring that a plugin
+install cannot do for itself, because it lives in files that belong to you:
 
-Prefer to read the code first? Clone it yourself; Omarchy loads any valid
-plugin directory:
+* `osaka-weather` on your PATH, and bash completion for it
+* `SUPER+ALT+R` / `D` / `N` / `W` keybindings
+* the **bar widget**, placed in the right-hand section
+
+`install.sh` is idempotent, skips anything already present, and only ever edits
+a file inside a marked block it created. `--dry-run` shows exactly what it would
+touch; `--uninstall` reverses precisely that.
+
+| Flag | Effect |
+|---|---|
+| `--no-widget` | do not add the bar widget |
+| `--with-theme-hook` | park the weather when you switch away from its theme |
+| `--dry-run` | print the plan, change nothing |
+
+> **This replaces Omarchy's background renderer** while it is enabled. That is
+> unavoidable rather than rude — the day/night grade is applied to the
+> photograph itself, so the plugin has to own the layer the photo is drawn on.
+> See [How it takes over the wallpaper](#how-it-takes-over-the-wallpaper).
+
+The Omarchy menu rows are the one thing `install.sh` will not add for you —
+they share a file with your own entries. See [Omarchy menu](#omarchy-menu).
+
+### Updating
+
+```bash
+omarchy plugin update io.github.rr-codebase.osaka-jade-weather
+```
+
+Your state survives an update — moods, dials and sky placement are kept.
+
+(`plugin add` is for first installs only; it refuses an id that is already
+present and points you at `plugin update`.)
+
+## Uninstall
+
+Run these **in order**. `install.sh` lives inside the plugin, so removing the
+plugin first would take the uninstaller with it:
+
+```bash
+cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
+./install.sh --uninstall                   # PATH link, completions, keys, widget, menu, hook
+omarchy plugin enable omarchy.background   # hand the wallpaper back to Omarchy
+cd ~ && omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
+```
+
+`--uninstall` removes the menu rows too, provided you pasted them with their
+marker comments. It deletes the marked line range rather than rewriting the
+file, so your own entries and comments survive, and it restores a backup if the
+result would not parse. Rows pasted without markers are reported, not guessed
+at.
+
+**State is kept.** `~/.local/state/omarchy/weather-fx.json` survives, so a
+reinstall picks up where you left off. Delete it for a clean slate.
+
+`omarchy plugin remove` deletes the plugin directory, including its git checkout
+if you cloned it. Nothing is lost that is not on GitHub, and reinstalling with
+`omarchy plugin add` gives you a fresh clone with `origin` already set.
+
+### Installing by hand
+
+Omarchy loads any valid plugin directory, so you can clone it yourself if you
+would rather read the code first:
 
 ```bash
 git clone https://github.com/RR-CodeBase/omarchy-osaka-jade-weather.git \
@@ -44,67 +91,8 @@ omarchy plugin enable io.github.rr-codebase.osaka-jade-weather
 ```
 
 The directory name **must** match the `id` in `manifest.json` — that is where
-`omarchy plugin update` and `omarchy plugin remove` look, and they will not
-find the plugin otherwise. `omarchy plugin add` names it that way for you.
-
-### Optional extras
-
-`osaka-weather` on your PATH, shell completion and `SUPER+ALT` keybindings live
-in files that belong to you, so a plugin install cannot write them:
-
-```bash
-cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
-./install.sh --dry-run    # see exactly what it would touch
-./install.sh              # idempotent; safe to re-run
-```
-
-Add `--with-theme-hook` to also install `extras/theme-set-hook.sh`, which parks
-the weather when you switch to another theme and restores your mood when you
-come back. It exists because the sky placement is tuned per wallpaper — weather
-composed for one photograph looks wrong on another. Off by default; the theme
-it watches is a variable at the top of the file.
-
-It skips anything already present and never edits a file it did not create a
-marked block in. `./install.sh --uninstall` removes precisely what it added.
-
-Without it the plugin still works — drive it with the full path,
-`~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather/bin/osaka-weather`,
-or with the optional bar widget below.
-
-### Updating
-
-```bash
-omarchy plugin update io.github.rr-codebase.osaka-jade-weather
-```
-
-Your state file is not touched by an update — moods, dials and sky placement
-survive.
-
-### Uninstall
-
-Run these **in order** — `install.sh` lives inside the plugin, so removing the
-plugin first would take the uninstaller with it:
-
-```bash
-cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
-./install.sh --uninstall                   # PATH link, completions, keybindings, hook
-omarchy plugin enable omarchy.background   # hand the wallpaper back to Omarchy
-cd ~ && omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
-```
-
-That removes the menu rows too, provided you pasted them with their marker
-comments. It deletes the marked line range rather than rewriting the file, so
-your own entries and comments survive, and it restores a backup if the result
-would not parse. Rows pasted without the markers are reported, not guessed at.
-
-**State is kept.** `~/.local/state/omarchy/weather-fx.json` survives, so a
-reinstall picks up your moods, dials and sky placement. Delete it for a clean
-slate.
-
-Note that `omarchy plugin remove` deletes the plugin directory — including its
-git checkout if you cloned it. Nothing is lost that is not on GitHub, and
-reinstalling with `omarchy plugin add` gives you a fresh clone with `origin`
-already set.
+`omarchy plugin update` and `omarchy plugin remove` look, and they will not find
+the plugin otherwise. `omarchy plugin add` names it that way for you.
 
 ## The three toggles
 
@@ -153,6 +141,26 @@ to `~/.config/omarchy/shell.json`, in whichever section you want:
 "right": [ { "id": "io.github.rr-codebase.osaka-jade-weather" }, ... ]
 ```
 
+## Bar widget
+
+`install.sh` puts it in the right-hand section by default. The icon shows the
+current mood; **click** cycles, **right-click** toggles rain, **middle-click**
+clears, **scroll** changes intensity. It reads the state file directly, so it
+stays in step with the CLI, the keybindings and the menu without polling.
+
+```bash
+./install.sh --no-widget                      # skip it
+OSAKA_WEATHER_SECTION=center ./install.sh     # or put it elsewhere
+```
+
+To move or remove it later, edit `bar.layout` in `~/.config/omarchy/shell.json`;
+it hot-reloads on save.
+
+Worth knowing if you are reading the manifest and wondering why `install.sh`
+does this at all: `omarchy plugin enable` will not place the widget, because
+this plugin registers as a *service* as well as a widget and the service entry
+claims the slot.
+
 ## Omarchy menu
 
 `extras/omarchy-menu.jsonc` holds a ready-made **Osaka Jade Weather** submenu —
@@ -189,6 +197,19 @@ osaka-weather sky reset
 Other dials: `intensity` (0.2–2.0, particle density), `wind` (−1–1, rain slant),
 and the booleans `drift` (slow ken-burns push), `parallax` (photo leans away
 from the pointer), `grain` (film grain) and `enabled` (master switch).
+
+## How it takes over the wallpaper
+
+This plugin declares `clonedFrom: omarchy.background`, which tells Omarchy to
+disable its own background plugin and use this one instead while this is
+enabled. The day/night colour grade is applied to the photograph itself, so an
+overlay-only version could draw rain but could never turn night into morning.
+
+Reverting is one command, and your wallpaper choice is untouched:
+
+```bash
+omarchy plugin enable omarchy.background
+```
 
 ## How it fits together
 

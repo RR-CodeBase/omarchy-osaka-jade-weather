@@ -133,16 +133,6 @@ SUPER+ALT+R  rain      SUPER+ALT+D  sunshine
 SUPER+ALT+N  night     SUPER+ALT+W  cycle
 ```
 
-There is also an optional **bar widget** — the icon shows the current mood,
-click cycles, right-click toggles rain, scroll changes intensity. Because this
-plugin registers as a service as well as a widget, `omarchy plugin enable`
-claims the service slot and will not place the widget for you. Add it by hand
-to `~/.config/omarchy/shell.json`, in whichever section you want:
-
-```jsonc
-"right": [ { "id": "io.github.rr-codebase.osaka-jade-weather" }, ... ]
-```
-
 ## The theme
 
 `install.sh` builds a theme called **Osaka Jade Weather** and leaves it for you
@@ -181,8 +171,9 @@ network panels are:
 * one-click **presets**: clear, storm, golden hour, match the real weather,
   follow the sun
 
-The bar icon shows what is on at a glance, and **scrolling it changes intensity
-without opening anything**. Middle-click clears.
+The bar icon shows what is on at a glance; click it for the panel, middle-click
+to clear. Every value lives in the panel, so nothing changes by scrolling past
+the bar.
 
 `install.sh` places it in the right-hand section by default:
 

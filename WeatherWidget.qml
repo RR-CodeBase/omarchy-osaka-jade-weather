@@ -9,8 +9,9 @@ import qs.Ui
 // anchored to it for the body.
 //
 // The icon reflects whatever is on; the panel holds a switch per mood and
-// sliders for intensity and wind. Scrolling the bar icon still changes
-// intensity without opening anything.
+// sliders for intensity and wind. Everything that changes a value lives in the
+// panel -- the bar icon only opens it, so there is no way to nudge a dial by
+// scrolling past it.
 //
 // State is read from the file the service watches rather than by shelling out,
 // so the panel stays in step with the CLI, the keybindings and the menu.
@@ -60,6 +61,30 @@ Panel {
     if (root.bar) root.bar.run("'" + root.cli.replace(/'/g, "'\\''") + "' " + args)
   }
 
+  property string pendingCmd: ""
+
+  function queue(cmd) {
+    pendingCmd = cmd
+    if (!applyTimer.running) applyTimer.restart()
+  }
+
+  function flush(cmd) {
+    applyTimer.stop()
+    pendingCmd = ""
+    run(cmd)
+  }
+
+  Timer {
+    id: applyTimer
+    interval: 200
+    repeat: false
+    onTriggered: {
+      if (root.pendingCmd === "") return
+      root.run(root.pendingCmd)
+      root.pendingCmd = ""
+    }
+  }
+
   FileView {
     id: stateFile
     path: Quickshell.env("HOME") + "/.local/state/omarchy/weather-fx.json"
@@ -88,13 +113,10 @@ Panel {
     text: root.glyph
     active: root.anyMood
     activeColor: Color.accent
-    tooltipText: root.moodName + "\nClick for weather · Scroll for intensity"
+    tooltipText: root.moodName + "\nClick for weather"
     onPressed: function(b) {
       if (b === Qt.MiddleButton) root.run("clear")
       else root.toggle()
-    }
-    onWheelMoved: function(delta) {
-      root.run(delta > 0 ? "intensity +0.1" : "intensity -0.1")
     }
   }
 
@@ -193,7 +215,8 @@ Panel {
           maximum: 2.0
           step: 0.1
           value: root.intensity
-          onMoved: function(v) { root.run("intensity " + v.toFixed(2)) }
+          onMoved: function(v) { root.queue("intensity " + v.toFixed(2)) }
+          onReleased: function(v) { root.flush("intensity " + v.toFixed(2)) }
         }
 
         PanelSectionHeader {
@@ -209,7 +232,8 @@ Panel {
           maximum: 1.0
           step: 0.05
           value: root.wind
-          onMoved: function(v) { root.run("wind " + v.toFixed(2)) }
+          onMoved: function(v) { root.queue("wind " + v.toFixed(2)) }
+          onReleased: function(v) { root.flush("wind " + v.toFixed(2)) }
         }
 
         PanelSeparator {

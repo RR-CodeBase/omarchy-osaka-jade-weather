@@ -19,7 +19,7 @@
   "license": "MIT",
   "barWidget": {
     "displayName": "Osaka Jade Weather",
-    "description": "Switch the wallpaper weather: rain, sunshine, night. Click cycles, right-click toggles rain, scroll changes intensity.",
+    "description": "Wallpaper weather panel: switch rain, sunshine and night, and set intensity and wind.",
     "category": "Appearance",
     "aliases": [
       "weather",

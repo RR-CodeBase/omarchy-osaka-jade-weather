@@ -373,13 +373,11 @@ enabled | drift | parallax | grain)
 intensity)
   value=$(resolve_number intensity "${1:-}" 0.2 2.0)
   write_state ".intensity = $value"
-  omarchy-notification-send -g 󰖝 -t 1400 "Osaka Jade" "Intensity $value" 2>/dev/null || true
   ;;
 
 wind)
   value=$(resolve_number wind "${1:-}" -1 1)
   write_state ".wind = $value"
-  omarchy-notification-send -g 󰖝 -t 1400 "Osaka Jade" "Wind $value" 2>/dev/null || true
   ;;
 
 sky)

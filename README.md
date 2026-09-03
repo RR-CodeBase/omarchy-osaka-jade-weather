@@ -30,14 +30,60 @@ omarchy plugin enable omarchy.background
 omarchy plugin add https://github.com/RR-CodeBase/omarchy-osaka-jade-weather.git --enable
 ```
 
-That is enough to make it work. The optional extras — `osaka-weather` on your
-PATH, shell completion, and `SUPER+ALT` keybindings — live in files that belong
-to you, so a plugin install cannot write them. Add them with:
+That is the whole install — the weather layer is live as soon as the shell
+picks it up. (`plugin add` is for first installs only; it refuses an id that is
+already present and points you at `plugin update`.)
+
+Prefer to read the code first? Clone it yourself; Omarchy loads any valid
+plugin directory:
+
+```bash
+git clone https://github.com/RR-CodeBase/omarchy-osaka-jade-weather.git \
+  ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
+omarchy plugin enable io.github.rr-codebase.osaka-jade-weather
+```
+
+The directory name **must** match the `id` in `manifest.json` — that is where
+`omarchy plugin update` and `omarchy plugin remove` look, and they will not
+find the plugin otherwise. `omarchy plugin add` names it that way for you.
+
+### Optional extras
+
+`osaka-weather` on your PATH, shell completion and `SUPER+ALT` keybindings live
+in files that belong to you, so a plugin install cannot write them:
 
 ```bash
 cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
-./install.sh            # --dry-run to preview, --uninstall to reverse
+./install.sh --dry-run    # see exactly what it would touch
+./install.sh              # idempotent; safe to re-run
 ```
+
+It skips anything already present and never edits a file it did not create a
+marked block in. `./install.sh --uninstall` removes precisely what it added.
+
+Without it the plugin still works — drive it with the full path,
+`~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather/bin/osaka-weather`,
+or with the optional bar widget below.
+
+### Updating
+
+```bash
+omarchy plugin update io.github.rr-codebase.osaka-jade-weather
+```
+
+Your state file is not touched by an update — moods, dials and sky placement
+survive.
+
+### Uninstall
+
+```bash
+cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather && ./install.sh --uninstall
+omarchy plugin enable omarchy.background   # hand the wallpaper back to Omarchy
+omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
+```
+
+Removing the plugin leaves `~/.local/state/omarchy/weather-fx.json` behind so a
+reinstall picks up where you left off. Delete it if you want a clean slate.
 
 ## The three toggles
 

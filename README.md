@@ -181,11 +181,13 @@ and retune with `osaka-weather sky` when you change wallpaper.
 One icon in the bar, and a panel behind it built the way Omarchy's own audio and
 network panels are:
 
-* a **switch per mood** — they are independent and stack, so switches rather
-  than a radio group
+* a **switch per mood** — rain, sunshine, night, and thunder on top of rain.
+  They are independent and stack, so switches rather than a radio group
 * **intensity** and **wind** sliders
-* one-click **presets**: clear, storm, golden hour, match the real weather,
-  follow the sun
+* **Automatic** — switches for the two tracking modes, follow the sun and match
+  real weather
+* **Presets** — labelled buttons for whole combinations: clear, rain, storm,
+  golden hour, night
 
 The bar icon shows what is on at a glance; click it for the panel, middle-click
 to clear. Every value lives in the panel, so nothing changes by scrolling past

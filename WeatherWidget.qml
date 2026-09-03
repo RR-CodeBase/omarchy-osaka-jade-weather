@@ -133,8 +133,8 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: panel.fittedContentWidth(Style.space(300))
-    contentHeight: panel.fittedContentHeight(panelColumn.implicitHeight, Style.space(520))
+    contentWidth: panel.fittedContentWidth(Style.space(320))
+    contentHeight: panel.fittedContentHeight(panelColumn.implicitHeight, Style.space(640))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -315,24 +315,35 @@ Panel {
           foreground: root.barForeground
         }
 
-        // Genuinely one-shot: these set a combination and are done.
-        Row {
+        PanelSectionHeader {
+          text: "Presets"
+          foreground: root.barForeground
+          fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
+        }
+
+        // Genuinely one-shot: each sets a whole combination and is done, so
+        // these stay buttons rather than joining the toggles above. Labelled,
+        // because five weather glyphs at this size are near-indistinguishable.
+        Flow {
+          width: panelColumn.width
           spacing: Style.spacing.controlGap
 
           Repeater {
             model: [
-              { cmd: "clear",      glyph: "󰅖", tip: "Clear — all moods off" },
-              { cmd: "storm",      glyph: "󰖓", tip: "Storm — heavy rain and thunder at night" },
-              { cmd: "shower",     glyph: "󰖗", tip: "Rain — no thunder" },
-              { cmd: "goldenhour", glyph: "󰖚", tip: "Golden hour — sun and stars" },
-              { cmd: "noir",       glyph: "󰖔", tip: "Night — stars and fireflies" }
+              { cmd: "clear",      label: "Clear",  tip: "All moods off" },
+              { cmd: "shower",     label: "Rain",   tip: "Rain, no thunder" },
+              { cmd: "storm",      label: "Storm",  tip: "Heavy rain and thunder at night" },
+              { cmd: "goldenhour", label: "Golden", tip: "Sun and stars at once" },
+              { cmd: "noir",       label: "Night",  tip: "Stars, moonlight and fireflies" }
             ]
 
-            PanelActionButton {
+            Button {
               required property var modelData
-              iconText: modelData.glyph
+              text: modelData.label
               tooltipText: modelData.tip
+              bordered: true
               foreground: root.barForeground
+              accent: Color.accent
               fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
               onClicked: { root.run(modelData.cmd); root.close() }
             }

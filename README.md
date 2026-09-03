@@ -58,6 +58,12 @@ cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
 ./install.sh              # idempotent; safe to re-run
 ```
 
+Add `--with-theme-hook` to also install `extras/theme-set-hook.sh`, which parks
+the weather when you switch to another theme and restores your mood when you
+come back. It exists because the sky placement is tuned per wallpaper — weather
+composed for one photograph looks wrong on another. Off by default; the theme
+it watches is a variable at the top of the file.
+
 It skips anything already present and never edits a file it did not create a
 marked block in. `./install.sh --uninstall` removes precisely what it added.
 
@@ -76,14 +82,30 @@ survive.
 
 ### Uninstall
 
+Run these **in order** — `install.sh` lives inside the plugin, so removing the
+plugin first would take the uninstaller with it:
+
 ```bash
-cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather && ./install.sh --uninstall
+cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
+./install.sh --uninstall                   # PATH link, completions, keybindings, hook
 omarchy plugin enable omarchy.background   # hand the wallpaper back to Omarchy
-omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
+cd ~ && omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
 ```
 
-Removing the plugin leaves `~/.local/state/omarchy/weather-fx.json` behind so a
-reinstall picks up where you left off. Delete it if you want a clean slate.
+Two things the uninstaller deliberately does not do:
+
+* **Menu rows** are removed by hand. They live in
+  `~/.config/omarchy/extensions/omarchy-menu.jsonc` alongside your own entries,
+  and rewriting that file would strip your comments — so the uninstaller names
+  the keys to delete instead of editing it. Every one starts `osaka-weather`.
+* **State is kept.** `~/.local/state/omarchy/weather-fx.json` survives, so a
+  reinstall picks up your moods, dials and sky placement. Delete it for a clean
+  slate.
+
+Note that `omarchy plugin remove` deletes the plugin directory — including its
+git checkout if you cloned it. Nothing is lost that is not on GitHub, and
+reinstalling with `omarchy plugin add` gives you a fresh clone with `origin`
+already set.
 
 ## The three toggles
 

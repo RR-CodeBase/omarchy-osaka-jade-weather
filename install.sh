@@ -22,19 +22,22 @@ BIN_LINK="$HOME/.local/bin/osaka-weather"
 COMPLETION="$HOME/.local/share/bash-completion/completions/osaka-weather"
 BINDINGS="$HOME/.config/hypr/bindings.lua"
 MENU="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
+HOOK="$HOME/.config/omarchy/hooks/theme-set.d/osaka-weather.hook"
 
 MARK_BEGIN="-- >>> osaka-jade-weather >>>"
 MARK_END="-- <<< osaka-jade-weather <<<"
 
 DRY=0
 MODE=install
+WANT_HOOK=0
 for arg in "$@"; do
   case "$arg" in
   --dry-run) DRY=1 ;;
   --uninstall) MODE=uninstall ;;
+  --with-theme-hook) WANT_HOOK=1 ;;
   -h | --help)
     sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
-    echo "Usage: ./install.sh [--dry-run] [--uninstall]"
+    echo "Usage: ./install.sh [--dry-run] [--with-theme-hook] [--uninstall]"
     exit 0
     ;;
   *)
@@ -91,6 +94,16 @@ LUA
     say "SKIP  $BINDINGS not found"
   fi
 
+  if (( WANT_HOOK )); then
+    run "mkdir -p '$(dirname "$HOOK")'"
+    run "install -m 0755 '$HERE/extras/theme-set-hook.sh' '$HOOK'"
+    say "theme hook installed (weather parks itself outside its theme)"
+  elif [[ -f $HOOK ]]; then
+    say "SKIP  theme hook already installed"
+  else
+    say "NOTE  theme hook not installed; pass --with-theme-hook to add it"
+  fi
+
   if [[ -f $MENU ]] && grep -q '"osaka-weather.rain"' "$MENU"; then
     say "SKIP  menu entries already present"
   else
@@ -128,6 +141,18 @@ uninstall_all() {
       sed -i "/$(printf '%s' "$MARK_BEGIN" | sed 's/[]\/$*.^[]/\\&/g')/,/$(printf '%s' "$MARK_END" | sed 's/[]\/$*.^[]/\\&/g')/d" "$BINDINGS"
       say "removed keybindings"
     fi
+  fi
+
+  if [[ -f $HOOK ]]; then
+    run "rm -f '$HOOK'"
+    say "removed theme hook"
+  fi
+
+  if [[ -f $MENU ]] && grep -q '"osaka-weather' "$MENU"; then
+    say "ACTION NEEDED  menu rows are in a file you share with your own entries,"
+    say "               so they are not removed automatically. Delete the keys"
+    say "               starting \"osaka-weather\" from:"
+    say "               $MENU"
   fi
 
   echo

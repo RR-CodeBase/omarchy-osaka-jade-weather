@@ -22,7 +22,6 @@ The first command is the plugin. The second is the desktop wiring that a plugin
 install cannot do for itself, because it lives in files that belong to you:
 
 * `osaka-weather` on your PATH, and bash completion for it
-* `SUPER+ALT+R` / `D` / `N` / `W` keybindings
 * the **bar widget**, placed in the right-hand section
 * the **Osaka Jade Weather theme** (see below)
 
@@ -63,7 +62,7 @@ plugin first would take the uninstaller with it:
 
 ```bash
 cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
-./install.sh --uninstall                   # PATH link, completions, keys, widget, menu, hook
+./install.sh --uninstall                   # PATH link, completions, widget, theme, menu, hook
 omarchy plugin enable omarchy.background   # hand the wallpaper back to Omarchy
 cd ~ && omarchy plugin remove io.github.rr-codebase.osaka-jade-weather
 ```
@@ -141,13 +140,6 @@ undone on the next tick.
 
 One-shot equivalents remain if you want the result without the tracking:
 `osaka-weather auto` and `osaka-weather sync`.
-
-Keybindings, if you ran `install.sh`:
-
-```
-SUPER+ALT+R  rain      SUPER+ALT+D  sunshine
-SUPER+ALT+N  night     SUPER+ALT+W  cycle
-```
 
 ## The theme
 

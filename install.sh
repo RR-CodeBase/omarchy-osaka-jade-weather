@@ -8,7 +8,7 @@
 #
 #   * `osaka-weather` on your PATH (a symlink; the script stays in the plugin)
 #   * bash completion for it
-#   * SUPER+ALT+R/D/N/W keybindings
+#   * the bar widget, and the Osaka Jade Weather theme
 #   * a Weather submenu in the Omarchy menu
 #
 # Everything is opt-in, everything is idempotent, and `--uninstall` removes
@@ -55,7 +55,7 @@ plugin install cannot, because they live in files that belong to you.
 
 Usage: ./install.sh [--dry-run] [--no-widget] [--no-theme] [--with-theme-hook] [--uninstall]
 
-  (default)           PATH symlink, completion, keybindings, bar widget, theme
+  (default)           PATH symlink, completion, bar widget, theme
   --no-widget         skip the bar widget
   --no-theme          skip the Osaka Jade Weather theme
   --with-theme-hook   park the weather when you switch away from its theme
@@ -97,31 +97,6 @@ install_all() {
     run "mkdir -p '$(dirname "$COMPLETION")'"
     run "install -m 0644 '$HERE/completions/osaka-weather' '$COMPLETION'"
     say "shell completion installed"
-  fi
-
-  # Keybindings go in a marked block so --uninstall can take them back out
-  # without touching anything else in the file.
-  if [[ -f $BINDINGS ]] && grep -q "osaka-weather" "$BINDINGS"; then
-    say "SKIP  keybindings already present"
-  elif [[ -f $BINDINGS ]]; then
-    if (( DRY )); then
-      say "would: append SUPER+ALT+R/D/N/W bindings to $BINDINGS"
-    else
-      cat >>"$BINDINGS" <<LUA
-
-$MARK_BEGIN
--- Weather toggles. The moods are independent and stack: rain + night is a
--- storm, rain + day a sun shower.
-o.bind("SUPER + ALT + R", "Weather: rain", "osaka-weather rain")
-o.bind("SUPER + ALT + D", "Weather: sunshine", "osaka-weather day")
-o.bind("SUPER + ALT + N", "Weather: night", "osaka-weather night")
-o.bind("SUPER + ALT + W", "Weather: cycle", "osaka-weather cycle")
-$MARK_END
-LUA
-      say "bound SUPER+ALT+R / D / N / W"
-    fi
-  else
-    say "SKIP  $BINDINGS not found"
   fi
 
   if (( WANT_THEME )); then
@@ -326,6 +301,8 @@ uninstall_all() {
 
   [[ -f $COMPLETION ]] && { run "rm -f '$COMPLETION'"; say "removed completion"; }
 
+  # Older versions bound SUPER+ALT keys. Take them back out on upgrade paths
+  # that run --uninstall, even though nothing installs them any more.
   if [[ -f $BINDINGS ]] && grep -qF -- "$MARK_BEGIN" "$BINDINGS"; then
     if (( DRY )); then
       say "would: strip the marked block from $BINDINGS"

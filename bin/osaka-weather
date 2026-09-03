@@ -145,16 +145,6 @@ mood_label() {
   esac
 }
 
-notify_state() {
-  [[ ${OSAKA_WEATHER_QUIET:-0} == 1 ]] && return 0
-  local label icon
-  label=$(mood_label)
-  if [[ $(get rain) == true ]]; then icon=$(glyph_for rain)
-  elif [[ $(get day) == true ]]; then icon=$(glyph_for day)
-  elif [[ $(get night) == true ]]; then icon=$(glyph_for night)
-  else icon=$(glyph_for clear); fi
-  omarchy-notification-send -g "$icon" -t 1600 "Osaka Jade" "$label" 2>/dev/null || true
-}
 
 status_human() {
   local s
@@ -407,37 +397,33 @@ rain | day | night | thunder)
   rain | thunder) write_state ".$cmd = $value | .followWeather = false" ;;
   day | night) write_state ".$cmd = $value | .followSun = false" ;;
   esac
-  notify_state
   ;;
 
 follow-sun | followsun)
   value=$(resolve_bool followSun "${1:-toggle}")
   write_state ".followSun = $value"
   [[ $value == true ]] && apply_follow_sun
-  notify_state
   ;;
 
 follow-weather | followweather)
   value=$(resolve_bool followWeather "${1:-toggle}")
   write_state ".followWeather = $value"
   [[ $value == true ]] && apply_follow_weather
-  notify_state
   ;;
 
 # Called on a timer by the shell plugin. Does nothing unless a mode is on, so
 # the timer can run unconditionally and stay cheap.
 tick)
   if [[ $(get followWeather) == true ]]; then
-    OSAKA_WEATHER_QUIET=1 apply_follow_weather
+    apply_follow_weather
   elif [[ $(get followSun) == true ]]; then
-    OSAKA_WEATHER_QUIET=1 apply_follow_sun
+    apply_follow_sun
   fi
   ;;
 
 enabled | drift | parallax | grain)
   value=$(resolve_bool "$cmd" "${1:-toggle}")
   write_state ".$cmd = $value"
-  [[ $cmd == enabled ]] && notify_state
   ;;
 
 intensity)
@@ -458,7 +444,6 @@ mood)
   (( $# == 3 )) || die "usage: osaka-weather mood <rain> <day> <night>"
   r=$(resolve_bool rain "$1"); d=$(resolve_bool day "$2"); n=$(resolve_bool night "$3")
   write_state ".rain=$r | .day=$d | .night=$n"
-  notify_state
   ;;
 
 cycle)
@@ -471,7 +456,6 @@ cycle)
   truefalsetrue) apply_preset drizzle ;;
   *) apply_preset clear ;;
   esac
-  notify_state
   ;;
 
 auto)
@@ -480,13 +464,11 @@ auto)
   else
     write_state '.day=false | .night=true'
   fi
-  notify_state
   ;;
 
 sync)
   report=$(fetch_wttr) || die "could not reach wttr.in and no cached report"
   code=$(jq -r '.current_condition[0].weatherCode // "113"' <<<"$report")
-  desc=$(jq -r '.current_condition[0].weatherDesc[0].value // "?"' <<<"$report" | xargs)
   gust=$(jq -r '.current_condition[0].WindGustKmph // .current_condition[0].windspeedKmph // "0"' <<<"$report")
 
   # WWO codes: everything at or above 176 is precipitation of some kind.
@@ -505,15 +487,12 @@ sync)
   [[ $heavy == true ]] && intens=1.5
 
   write_state ".rain=$wet | .thunder=$heavy | .day=$daylight | .night=$([[ $daylight == true ]] && echo false || echo true) | .wind=$windv | .intensity=$intens"
-  omarchy-notification-send -g "$(glyph_for "$([[ $wet == true ]] && echo rain || ([[ $daylight == true ]] && echo day || echo night))")" \
-    -t 2400 "Osaka Jade — synced" "$desc · $(mood_label)" 2>/dev/null || true
   ;;
 
 reset)
   ensure_state
   printf '%s\n' "$DEFAULTS" >"$STATE"
   omarchy-shell -q weather-fx reload 2>/dev/null || true
-  notify_state
   ;;
 
 menu)
@@ -531,10 +510,6 @@ path)
   ;;
 
 *)
-  if apply_preset "$cmd"; then
-    notify_state
-  else
-    die "unknown command '$cmd' (try: osaka-weather --help)"
-  fi
+  apply_preset "$cmd" || die "unknown command '$cmd' (try: osaka-weather --help)"
   ;;
 esac

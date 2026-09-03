@@ -33,12 +33,12 @@ if [[ $THEME == "$THEME_SLUG" ]]; then
   else
     rain=false day=false night=true
   fi
-  OSAKA_WEATHER_QUIET=1 osaka-weather mood "$rain" "$day" "$night" >/dev/null 2>&1 || true
+  osaka-weather mood "$rain" "$day" "$night" >/dev/null 2>&1 || true
 else
   # Leaving: remember the mood, then go still. Don't clobber an existing
   # parked mood -- two non-jade themes in a row would overwrite it with all-off.
   if [[ ! -s $SAVED && -s $STATE ]]; then
     jq '{rain, day, night}' "$STATE" >"$SAVED" 2>/dev/null || true
   fi
-  OSAKA_WEATHER_QUIET=1 osaka-weather clear >/dev/null 2>&1 || true
+  osaka-weather clear >/dev/null 2>&1 || true
 fi

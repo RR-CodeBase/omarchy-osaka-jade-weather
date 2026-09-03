@@ -91,10 +91,12 @@ LUA
     say "SKIP  $BINDINGS not found"
   fi
 
-  if [[ -f $MENU ]] && grep -q '"weather.rain"' "$MENU"; then
+  if [[ -f $MENU ]] && grep -q '"osaka-weather.rain"' "$MENU"; then
     say "SKIP  menu entries already present"
   else
-    say "NOTE  menu entries not added automatically -- see README (Omarchy menu)"
+    say "NOTE  menu rows not added automatically (they share a file with your"
+    say "      own entries). Paste extras/omarchy-menu.jsonc into"
+    say "      ~/.config/omarchy/extensions/omarchy-menu.jsonc"
   fi
 
   (( DRY )) || {

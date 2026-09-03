@@ -86,6 +86,17 @@ to `~/.config/omarchy/shell.json`, in whichever section you want:
 "right": [ { "id": "<plugin-id>" }, ... ]
 ```
 
+## Omarchy menu
+
+`extras/omarchy-menu.jsonc` holds a ready-made **Osaka Jade Weather** submenu —
+the three toggles with live tick marks, the presets, and the two automatic
+modes. Paste its keys into your own
+`~/.config/omarchy/extensions/omarchy-menu.jsonc`; the file hot-reloads on save.
+
+The ids are namespaced (`osaka-weather.*`) so they never collide with Omarchy's
+own weather forecast rows, and each toggle's `checked` condition reads the live
+state file rather than caching, so the ticks are always accurate.
+
 ## Tuning it to your wallpaper
 
 The defaults are composed for the Osaka Jade *Glowing City* background: the moon

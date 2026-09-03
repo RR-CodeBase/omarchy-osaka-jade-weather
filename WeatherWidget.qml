@@ -322,23 +322,26 @@ Panel {
         }
 
         // Genuinely one-shot: each sets a whole combination and is done, so
-        // these stay buttons rather than joining the toggles above. Labelled,
-        // because five weather glyphs at this size are near-indistinguishable.
+        // these stay buttons rather than joining the toggles above. Glyph and
+        // label together -- the glyph is what you aim at once you know the
+        // panel, the label is what makes storm and rain tellable apart the
+        // first time, since at this size they are the same cloud.
         Flow {
           width: panelColumn.width
           spacing: Style.spacing.controlGap
 
           Repeater {
             model: [
-              { cmd: "clear",      label: "Clear",  tip: "All moods off" },
-              { cmd: "shower",     label: "Rain",   tip: "Rain, no thunder" },
-              { cmd: "storm",      label: "Storm",  tip: "Heavy rain and thunder at night" },
-              { cmd: "goldenhour", label: "Golden", tip: "Sun and stars at once" },
-              { cmd: "noir",       label: "Night",  tip: "Stars, moonlight and fireflies" }
+              { cmd: "clear",      glyph: "󰅖", label: "Clear",  tip: "All moods off" },
+              { cmd: "shower",     glyph: "󰖗", label: "Rain",   tip: "Rain, no thunder" },
+              { cmd: "storm",      glyph: "󰖓", label: "Storm",  tip: "Heavy rain and thunder at night" },
+              { cmd: "goldenhour", glyph: "󰖚", label: "Golden", tip: "Sun and stars at once" },
+              { cmd: "noir",       glyph: "󰖔", label: "Night",  tip: "Stars, moonlight and fireflies" }
             ]
 
             Button {
               required property var modelData
+              iconText: modelData.glyph
               text: modelData.label
               tooltipText: modelData.tip
               bordered: true

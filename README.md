@@ -186,8 +186,8 @@ network panels are:
 * **intensity** and **wind** sliders
 * **Automatic** — switches for the two tracking modes, follow the sun and match
   real weather
-* **Presets** — labelled buttons for whole combinations: clear, rain, storm,
-  golden hour, night
+* **Presets** — buttons for whole combinations: clear, rain, storm, golden
+  hour, night
 
 The bar icon shows what is on at a glance; click it for the panel, middle-click
 to clear. Every value lives in the panel, so nothing changes by scrolling past

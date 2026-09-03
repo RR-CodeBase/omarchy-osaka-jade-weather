@@ -214,14 +214,37 @@ remove_menu_rows() {
   cp -- "$MENU" "$MENU.osaka-bak"
   python3 - "$MENU" <<'PYEOF' || { mv -f -- "$MENU.osaka-bak" "$MENU"; say "menu rows left alone (removal would have broken the file)"; return 0; }
 import json, pathlib, re, sys
+
 p = pathlib.Path(sys.argv[1])
 lines = p.read_text().splitlines(keepends=True)
 begin = next(i for i, l in enumerate(lines) if "osaka-jade-weather >>>" in l)
 end = next(i for i, l in enumerate(lines) if "osaka-jade-weather <<<" in l)
-text = "".join(lines[:begin] + lines[end + 1:])
-# A trailing comma before the closing brace is invalid once our block is gone.
-text = re.sub(r",(\s*)\n(\s*(?://[^\n]*\n\s*)*)\}", r"\1\n\2}", text, count=1)
-json.loads(re.sub(r"^\s*//.*$", "", text, flags=re.M))
+kept = lines[:begin] + lines[end + 1:]
+
+def parses(text):
+    try:
+        json.loads(re.sub(r"^\s*//.*$", "", text, flags=re.M))
+        return True
+    except ValueError:
+        return False
+
+text = "".join(kept)
+if not parses(text):
+    # Our block was the last entry, so the one before it now has a dangling
+    # comma. Strip it from the last line that is actually JSON -- never from a
+    # commented-out template line, which a regex over the whole file will
+    # happily eat.
+    for i in range(len(kept) - 1, -1, -1):
+        stripped = kept[i].strip()
+        if not stripped or stripped.startswith("//") or stripped == "}":
+            continue
+        if stripped.endswith(","):
+            kept[i] = kept[i].rstrip()[:-1] + "\n"
+        break
+    text = "".join(kept)
+
+if not parses(text):
+    sys.exit(1)
 p.write_text(text)
 PYEOF
   rm -f -- "$MENU.osaka-bak"

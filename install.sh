@@ -133,7 +133,7 @@ uninstall_all() {
   echo
   echo "The plugin itself is untouched. Remove it with:"
   echo "  omarchy plugin enable omarchy.background"
-  echo "  omarchy plugin remove ruan.osaka-jade-weather"
+  echo "  omarchy plugin remove io.github.rr-codebase.osaka-jade-weather"
 }
 
 case "$MODE" in

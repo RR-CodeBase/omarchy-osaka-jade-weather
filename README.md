@@ -27,7 +27,7 @@ omarchy plugin enable omarchy.background
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/<owner>/omarchy-osaka-jade-weather.git --enable
+omarchy plugin add https://github.com/RR-CodeBase/omarchy-osaka-jade-weather.git --enable
 ```
 
 That is enough to make it work. The optional extras — `osaka-weather` on your
@@ -35,7 +35,7 @@ PATH, shell completion, and `SUPER+ALT` keybindings — live in files that belon
 to you, so a plugin install cannot write them. Add them with:
 
 ```bash
-cd ~/.config/omarchy/plugins/<plugin-id>
+cd ~/.config/omarchy/plugins/io.github.rr-codebase.osaka-jade-weather
 ./install.sh            # --dry-run to preview, --uninstall to reverse
 ```
 
@@ -83,7 +83,7 @@ claims the service slot and will not place the widget for you. Add it by hand
 to `~/.config/omarchy/shell.json`, in whichever section you want:
 
 ```jsonc
-"right": [ { "id": "<plugin-id>" }, ... ]
+"right": [ { "id": "io.github.rr-codebase.osaka-jade-weather" }, ... ]
 ```
 
 ## Omarchy menu

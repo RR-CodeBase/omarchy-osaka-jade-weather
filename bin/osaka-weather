@@ -3,7 +3,7 @@
 # osaka-weather -- drive the weather layer on the Osaka Jade Custom wallpaper.
 #
 # State lives in one JSON file. This script is the only writer; the shell
-# plugin (ruan.osaka-jade-weather) watches the file and re-renders. The IPC poke after
+# plugin (io.github.rr-codebase.osaka-jade-weather) watches the file and re-renders. The IPC poke after
 # each write only skips the watcher's latency -- everything still works with
 # the shell restarted, the file hand-edited, or this script run over SSH.
 #

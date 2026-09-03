@@ -11,7 +11,7 @@ import qs.Ui
 // put `osaka-weather` on their PATH.
 BarWidget {
   id: root
-  moduleName: "ruan.osaka-jade-weather"
+  moduleName: "io.github.rr-codebase.osaka-jade-weather"
 
   readonly property string cli:
     Qt.resolvedUrl("bin/osaka-weather").toString().replace(/^file:\/\//, "")

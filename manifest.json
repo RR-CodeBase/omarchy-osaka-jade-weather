@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "ruan.osaka-jade-weather",
+  "id": "io.github.rr-codebase.osaka-jade-weather",
   "name": "Osaka Jade Weather",
-  "version": "1.1.0",
-  "author": "ruan",
+  "version": "1.0.0",
+  "author": "Ruan Roos",
   "description": "Animated weather for your wallpaper: rain, sunshine and night as independent toggles, drawn live over the desktop background",
   "kinds": [
     "service",
